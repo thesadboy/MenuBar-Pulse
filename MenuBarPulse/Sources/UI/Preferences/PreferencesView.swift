@@ -703,6 +703,95 @@ public struct PreferencesView: View {
             }
             .multilineTextAlignment(.center)
             
+            Divider().padding(.horizontal, 40)
+            
+            // MARK: 开发者信息
+            VStack(spacing: 10) {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                    Text("开发者")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("NickZhang")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left.forwardslash.chevron.right")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                    Text("源代码")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Button(action: {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/thesadboy/MenuBar-Pulse")!)
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 11))
+                            Text("thesadboy/MenuBar-Pulse")
+                                .font(.system(size: 11.5))
+                                .underline()
+                        }
+                    }
+                    .buttonStyle(.link)
+                    .foregroundColor(.accentColor)
+                }
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "doc.text")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                    Text("官方主页")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Button(action: {
+                        NSWorkspace.shared.open(URL(string: "https://thesadboy.github.io/MenuBar-Pulse/")!)
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 11))
+                            Text("thesadboy.github.io/MenuBar-Pulse")
+                                .font(.system(size: 11.5))
+                                .underline()
+                        }
+                    }
+                    .buttonStyle(.link)
+                    .foregroundColor(.accentColor)
+                }
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "heart.fill")
+                        .foregroundColor(.pink)
+                        .font(.system(size: 12))
+                    Text("开源协议")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("MIT License")
+                        .font(.system(size: 11.5))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.45))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+            )
+            .padding(.horizontal, 20)
+            
+            Text("© 2026 NickZhang · 以 MIT 协议开源发布")
+                .font(.system(size: 10))
+                .foregroundColor(.secondary.opacity(0.7))
+            
             Spacer()
         }
         .frame(maxWidth: .infinity)
