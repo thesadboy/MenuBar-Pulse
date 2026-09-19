@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="MenuBarPulse/AppIcon.icns" width="128" height="128" alt="MenuBarPulse Icon" />
+  <img src="docs/app_icon.png" width="128" height="128" alt="MenuBarPulse Icon" />
 </p>
 
 <h1 align="center">MenuBar Pulse</h1>

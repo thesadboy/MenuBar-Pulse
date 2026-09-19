@@ -13,3 +13,4 @@ MenuBarPulse/dmg_staging/
 
 # Local run/debug app copies (only package_dmg and release builds needed)
 MenuBarPulse/MenuBarPulse.app
+*.dmg
