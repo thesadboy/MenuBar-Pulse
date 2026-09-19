@@ -42,24 +42,31 @@ swiftc \
 echo "==> 正在进行应用签名..."
 codesign --force --deep --sign - "${APP_BUNDLE}"
 
-echo "==> 正在同步安装至系统应用程序目录 (/Applications/${APP_NAME}.app)..."
-WAS_RUNNING=0
-if pgrep -f "MenuBarPulse.app" >/dev/null 2>&1; then
-    WAS_RUNNING=1
-    killall "${APP_NAME}" 2>/dev/null || true
+# 只有在非 CI 环境且没有指定 --no-install 时才同步到 /Applications
+if [ "$1" != "--no-install" ] && [ "$CI" != "true" ]; then
+    echo "==> 正在同步安装至系统应用程序目录 (/Applications/${APP_NAME}.app)..."
+    WAS_RUNNING=0
+    if pgrep -f "MenuBarPulse.app" >/dev/null 2>&1; then
+        WAS_RUNNING=1
+        killall "${APP_NAME}" 2>/dev/null || true
+    fi
+    
+    if [ -w "/Applications" ]; then
+        rm -rf "/Applications/${APP_NAME}.app" 2>/dev/null || true
+        cp -R "${APP_BUNDLE}" "/Applications/${APP_NAME}.app"
+        rm -rf "${APP_BUNDLE}"
+        rm -rf "${DIR}/../${APP_NAME}.app"
+        
+        if [ $WAS_RUNNING -eq 1 ]; then
+            echo "==> 重新启动应用..."
+            open "/Applications/${APP_NAME}.app"
+        fi
+        
+        echo "==> 构建并安装成功！"
+        echo "    系统应用位置：/Applications/${APP_NAME}.app"
+    else
+        echo "==> /Applications 目录无直接写入权限，保留本地构建产物：${APP_BUNDLE}"
+    fi
+else
+    echo "==> 构建并签名成功！产物位置：${APP_BUNDLE}"
 fi
-
-rm -rf "/Applications/${APP_NAME}.app"
-cp -R "${APP_BUNDLE}" "/Applications/${APP_NAME}.app"
-
-# 清理本地构建目录中的 .app 过程文件，保持源码工作区极致纯净
-rm -rf "${APP_BUNDLE}"
-rm -rf "${DIR}/../${APP_NAME}.app"
-
-if [ $WAS_RUNNING -eq 1 ]; then
-    echo "==> 重新启动应用..."
-    open "/Applications/${APP_NAME}.app"
-fi
-
-echo "==> 构建并安装成功！"
-echo "    系统应用位置：/Applications/${APP_NAME}.app"

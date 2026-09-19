@@ -62,7 +62,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             object: popover,
             queue: .main
         ) { _ in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 AppState.shared.isDashboardVisible = false
             }
         }

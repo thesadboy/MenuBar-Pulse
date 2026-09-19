@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
 echo "==> 1. 重新编译最新版本 MenuBarPulse..."
-bash "${DIR}/build.sh"
+bash "${DIR}/build.sh" --no-install
 
 DMG_NAME="MenuBarPulse"
 OUTPUT_DIR="${DIR}/.."
@@ -17,7 +17,11 @@ rm -rf "${STAGING_DIR}"
 mkdir -p "${STAGING_DIR}"
 
 echo "==> 3. 复制应用与创建 /Applications 快捷方式..."
-cp -R "/Applications/MenuBarPulse.app" "${STAGING_DIR}/"
+if [ -d "${DIR}/MenuBarPulse.app" ]; then
+    cp -R "${DIR}/MenuBarPulse.app" "${STAGING_DIR}/"
+elif [ -d "/Applications/MenuBarPulse.app" ]; then
+    cp -R "/Applications/MenuBarPulse.app" "${STAGING_DIR}/"
+fi
 ln -s /Applications "${STAGING_DIR}/Applications"
 
 echo "==> 4. 生成 DMG 安装镜像..."

@@ -69,10 +69,9 @@ public final class AppState: ObservableObject {
         preferences.objectWillChange
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                Task { @MainActor in
-                    self?.restartTimer()
-                    self?.refreshData()
-                }
+                guard let self = self else { return }
+                self.restartTimer()
+                self.refreshData()
             }
             .store(in: &cancellables)
     }
@@ -81,7 +80,7 @@ public final class AppState: ObservableObject {
         timer?.invalidate()
         let interval = preferences.refreshInterval
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.refreshData()
             }
         }
