@@ -687,7 +687,7 @@ public struct PreferencesView: View {
                 .font(.system(size: 20, weight: .bold))
             
             let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            Text("版本 \(currentVersion) (Build 20260918)")
+            Text("版本 \(currentVersion) (Build 20260925)")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
             

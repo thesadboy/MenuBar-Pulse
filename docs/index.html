@@ -332,51 +332,100 @@
       font-size: 0.78rem;
     }
 
-    /* Interactive MenuBarPulse Status Item */
+    /* Interactive MenuBarPulse Status Items - Separate modules like real app */
     .menubar-pulse-item {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 3px 7px;
-      border-radius: 6px;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
+      font-size: 10px;
+      white-space: nowrap;
     }
 
     .menubar-pulse-item:hover, .menubar-pulse-item.active {
       background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
     }
 
     .net-stack {
       display: flex;
       flex-direction: column;
-      gap: 1px;
-      line-height: 1;
+      gap: 0px;
+      line-height: 1.15;
+      font-family: var(--font-mono);
+      font-size: 9px;
     }
 
     .net-row {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
     }
 
-    .net-row i {
-      font-size: 8px;
+    .net-arrow {
+      font-size: 7px;
+      font-weight: bold;
     }
 
     .arrow-up { color: #FF9F0A; }
     .arrow-down { color: #0A84FF; }
 
+    /* Battery capsule inline style */
+    .bat-capsule {
+      display: inline-flex;
+      align-items: center;
+      width: 22px;
+      height: 11px;
+      border: 1.2px solid rgba(255, 255, 255, 0.75);
+      border-radius: 2.5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bat-capsule::after {
+      content: '';
+      position: absolute;
+      right: -3.5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 0 1px 1px 0;
+    }
+
+    .bat-fill {
+      height: 100%;
+      background: #34C759;
+      border-radius: 1.5px;
+      transition: width 0.5s ease;
+    }
+
+    .bat-bolt {
+      font-size: 7px;
+      color: #34C759;
+    }
+
+    /* Fan spin animation */
+    @keyframes fanSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .fan-spinning {
+      animation: fanSpin 0.6s linear infinite;
+      display: inline-block;
+    }
+
     /* Simulated Popover Dashboard */
     .simulated-popover {
       position: absolute;
       top: 36px;
-      right: 180px;
-      width: 275px;
-      background: rgba(28, 33, 46, 0.88);
+      right: 100px;
+      width: 280px;
+      background: rgba(28, 33, 46, 0.92);
       backdrop-filter: blur(35px);
       -webkit-backdrop-filter: blur(35px);
       border-radius: 14px;
@@ -468,6 +517,15 @@
       align-items: center;
       gap: 6px;
     }
+
+    /* Menubar separator dot */
+    .menubar-sep {
+      width: 1px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 0 2px;
+    }
+
 
     /* Bento Grid Feature Section */
     .section-title {
@@ -714,7 +772,7 @@
     
     <div class="hero-cta">
       <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
-        <i class="ph-bold ph-apple-logo"></i> 下载 MenuBarPulse.dmg (v1.0.0)
+        <i class="ph-bold ph-apple-logo"></i> 下载 MenuBarPulse.dmg (v1.1.0)
       </a>
       <a href="#simulator" class="btn btn-secondary" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
         <i class="ph-bold ph-play-circle"></i> 在线交互体验
@@ -751,36 +809,54 @@
         </div>
 
         <div class="menubar-right">
-          <!-- MenuBarPulse Component (Interactive) -->
+          <!-- MenuBarPulse: Network Module -->
           <div class="menubar-pulse-item active" id="menuItem" title="点击展开/收起浮动面板">
             <div class="net-stack">
               <div class="net-row">
-                <i class="ph-bold ph-arrow-up arrow-up"></i>
-                <span id="liveUpSpeed" style="width: 48px; text-align: right;">1.2 KB/s</span>
+                <span class="net-arrow arrow-up">▲</span>
+                <span id="liveUpSpeed" style="width: 46px; text-align: right;">1.2 KB/s</span>
               </div>
               <div class="net-row">
-                <i class="ph-bold ph-arrow-down arrow-down"></i>
-                <span id="liveDownSpeed" style="width: 48px; text-align: right;">8.4 KB/s</span>
+                <span class="net-arrow arrow-down">▼</span>
+                <span id="liveDownSpeed" style="width: 46px; text-align: right;">8.4 KB/s</span>
               </div>
-            </div>
-            <!-- Battery capsule -->
-            <div style="display: flex; align-items: center; gap: 2px; padding: 1px 4px; background: rgba(52, 199, 89, 0.2); border-radius: 4px; border: 1px solid #34C759; font-size: 9px; color: #34C759;">
-              <i class="ph-fill ph-lightning"></i> 98%
-            </div>
-            <!-- Fan -->
-            <div style="display: flex; align-items: center; gap: 3px; font-size: 10px; color: #E5E5EA;">
-              <i class="ph-bold ph-fan" id="fanSpin"></i> 1850 rpm
-            </div>
-            <!-- Temp -->
-            <div style="font-size: 10px; color: #FF9F0A;">
-              41°C
             </div>
           </div>
 
+          <div class="menubar-sep"></div>
+
+          <!-- MenuBarPulse: Battery Module -->
+          <div class="menubar-pulse-item" id="menuItemBat" title="电池模块">
+            <div class="bat-capsule">
+              <div class="bat-fill" id="batFill" style="width: 98%;"></div>
+            </div>
+            <span class="bat-bolt">⚡</span>
+            <span style="font-family: var(--font-mono); font-size: 9.5px; color: #34C759;" id="batPercent">98%</span>
+          </div>
+
+          <div class="menubar-sep"></div>
+
+          <!-- MenuBarPulse: Fan Module -->
+          <div class="menubar-pulse-item" id="menuItemFan" title="风扇模块">
+            <span class="fan-spinning" style="font-size: 11px; color: #BF5AF2;">⟳</span>
+            <span style="font-family: var(--font-mono); font-size: 9.5px; color: #E5E5EA;" id="fanRpm">1850</span>
+          </div>
+
+          <div class="menubar-sep"></div>
+
+          <!-- MenuBarPulse: Temperature Module -->
+          <div class="menubar-pulse-item" id="menuItemTemp" title="温度模块">
+            <span style="font-size: 10px;">🌡</span>
+            <span style="font-family: var(--font-mono); font-size: 9.5px; color: #FF9F0A;" id="tempVal">41°C</span>
+          </div>
+
+          <div class="menubar-sep"></div>
+
+          <!-- macOS system tray icons -->
           <span><i class="ph-bold ph-wifi-high"></i></span>
           <span><i class="ph-bold ph-magnifying-glass"></i></span>
           <span><i class="ph-bold ph-sliders"></i></span>
-          <span id="liveClock" style="font-size: 0.8rem; font-weight: 500;">16:30</span>
+          <span id="liveClock" style="font-size: 0.8rem; font-weight: 500; font-family: var(--font-main);">16:30</span>
         </div>
       </div>
 
@@ -1015,9 +1091,114 @@
       </tbody>
     </table>
 
-    <div class="code-block" id="installation">
+    <div class="code-block">
       <span>$ git clone https://github.com/thesadboy/MenuBar-Pulse.git</span>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone https://github.com/thesadboy/MenuBar-Pulse.git'); alert('已复制克隆命令！')">复制</button>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone https://github.com/thesadboy/MenuBar-Pulse.git'); this.textContent='已复制!'; setTimeout(()=>this.textContent='复制', 1500)">复制</button>
+    </div>
+  </section>
+
+  <!-- Installation Guide -->
+  <section class="compare-section" id="installation">
+    <div class="section-title">
+      <h2>安装指南</h2>
+      <p>两种方式，三步完成，即刻启动你的 Mac 监控中心。</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+      <!-- Method 1: DMG -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 2rem; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #0A84FF, #30D158);"></div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <span style="background: rgba(10, 132, 255, 0.15); color: #0A84FF; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">推荐</span>
+          <h3 style="font-size: 1.15rem; font-weight: 700;">方式一：下载 DMG 安装包</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <span style="background: rgba(10, 132, 255, 0.12); color: #0A84FF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">1</span>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">下载安装包</div>
+              <div style="color: var(--text-secondary); font-size: 0.88rem;">前往 <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" target="_blank" style="color: #0A84FF; text-decoration: none;">GitHub Releases</a> 下载最新的 <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">MenuBarPulse.dmg</code></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <span style="background: rgba(10, 132, 255, 0.12); color: #0A84FF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">2</span>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">拖拽安装</div>
+              <div style="color: var(--text-secondary); font-size: 0.88rem;">双击打开 DMG 挂载镜像，将 <strong>MenuBarPulse.app</strong> 拖入 Applications 文件夹</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <span style="background: rgba(10, 132, 255, 0.12); color: #0A84FF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">3</span>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">启动应用</div>
+              <div style="color: var(--text-secondary); font-size: 0.88rem;">在启动台中打开 MenuBar Pulse，状态栏图标即时呈现</div>
+            </div>
+          </div>
+        </div>
+        <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" target="_blank" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+          <i class="ph-bold ph-download-simple"></i> 立即下载最新版
+        </a>
+      </div>
+
+      <!-- Method 2: Source Build -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 2rem; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #BF5AF2, #FF9F0A);"></div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <span style="background: rgba(191, 90, 242, 0.15); color: #BF5AF2; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">开发者</span>
+          <h3 style="font-size: 1.15rem; font-weight: 700;">方式二：从源码编译</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <span style="background: rgba(191, 90, 242, 0.12); color: #BF5AF2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">1</span>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">克隆仓库</div>
+              <div style="color: var(--text-secondary); font-size: 0.88rem;"><code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">git clone https://github.com/thesadboy/MenuBar-Pulse.git</code></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <span style="background: rgba(191, 90, 242, 0.12); color: #BF5AF2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">2</span>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">一键编译安装</div>
+              <div style="color: var(--text-secondary); font-size: 0.88rem;"><code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">cd MenuBar-Pulse/MenuBarPulse && ./build.sh</code></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+            <span style="background: rgba(191, 90, 242, 0.12); color: #BF5AF2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">3</span>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">自动启动</div>
+              <div style="color: var(--text-secondary); font-size: 0.88rem;">脚本会自动编译、签名、安装到 <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">/Applications</code> 并立即启动</div>
+            </div>
+          </div>
+        </div>
+        <a href="https://github.com/thesadboy/MenuBar-Pulse" target="_blank" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+          <i class="ph-bold ph-github-logo"></i> 查看源码仓库
+        </a>
+      </div>
+    </div>
+
+    <!-- System Requirements -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem 2rem;">
+      <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="ph-fill ph-info" style="color: #0A84FF;"></i> 系统要求
+      </h3>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">操作系统</div>
+          <div style="font-weight: 600; font-size: 0.95rem;">macOS 14.0+</div>
+        </div>
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">处理器架构</div>
+          <div style="font-weight: 600; font-size: 0.95rem;">Apple Silicon / Intel</div>
+        </div>
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">编译要求</div>
+          <div style="font-weight: 600; font-size: 0.95rem;">Swift 5.9+ / Xcode 15+</div>
+        </div>
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">第三方依赖</div>
+          <div style="font-weight: 600; font-size: 0.95rem; color: #30D158;">零依赖 ✓</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1030,7 +1211,7 @@
   </footer>
 
   <script>
-    // Live ticking values in the simulator
+    // DOM elements
     const upEl = document.getElementById('liveUpSpeed');
     const downEl = document.getElementById('liveDownSpeed');
     const cardUpEl = document.getElementById('cardUpSpeed');
@@ -1038,22 +1219,80 @@
     const clockEl = document.getElementById('liveClock');
     const menuItem = document.getElementById('menuItem');
     const popover = document.getElementById('popover');
+    const batPercent = document.getElementById('batPercent');
+    const batFill = document.getElementById('batFill');
+    const fanRpm = document.getElementById('fanRpm');
+    const tempVal = document.getElementById('tempVal');
 
-    // Toggle popover on click
-    menuItem.addEventListener('click', () => {
-      popover.classList.toggle('visible');
-      menuItem.classList.toggle('active');
+    // All clickable module items toggle popover
+    const allMenuItems = [menuItem, document.getElementById('menuItemBat'), document.getElementById('menuItemFan'), document.getElementById('menuItemTemp')];
+    allMenuItems.forEach(item => {
+      if (!item) return;
+      item.addEventListener('click', () => {
+        const isVisible = popover.classList.toggle('visible');
+        // Only highlight the clicked item
+        allMenuItems.forEach(m => m.classList.remove('active'));
+        if (isVisible) item.classList.add('active');
+      });
     });
 
-    // Update speeds realistically
+    // Format speed value
+    function fmtSpeed(kb) {
+      if (kb >= 1024) return (kb / 1024).toFixed(1) + ' MB/s';
+      return kb.toFixed(1) + ' KB/s';
+    }
+
+    // Simulate realistic network speed with occasional bursts
+    let burstTimer = 0;
+    let inBurst = false;
+
     setInterval(() => {
-      const up = (Math.random() * 4 + 0.8).toFixed(1);
-      const down = (Math.random() * 25 + 4.2).toFixed(1);
-      upEl.textContent = `${up} KB/s`;
-      downEl.textContent = `${down} KB/s`;
-      cardUpEl.textContent = `${up} KB/s | 1.84 GB`;
-      cardDownEl.textContent = `${down} KB/s | 14.62 GB`;
+      burstTimer++;
+      // Random burst every 8-15 ticks
+      if (!inBurst && burstTimer > 8 + Math.random() * 7) {
+        inBurst = true;
+        burstTimer = 0;
+      }
+      if (inBurst && burstTimer > 3 + Math.random() * 3) {
+        inBurst = false;
+        burstTimer = 0;
+      }
+
+      let up, down;
+      if (inBurst) {
+        up = Math.random() * 200 + 50;
+        down = Math.random() * 2000 + 500;
+      } else {
+        up = Math.random() * 4 + 0.3;
+        down = Math.random() * 20 + 2;
+      }
+
+      upEl.textContent = fmtSpeed(up);
+      downEl.textContent = fmtSpeed(down);
+      cardUpEl.textContent = `${fmtSpeed(up)} | 1.84 GB`;
+      cardDownEl.textContent = `${fmtSpeed(down)} | 14.62 GB`;
     }, 1200);
+
+    // Simulate fan RPM fluctuation
+    let baseRpm = 1850;
+    setInterval(() => {
+      baseRpm += Math.floor(Math.random() * 40 - 20);
+      baseRpm = Math.max(1200, Math.min(2400, baseRpm));
+      fanRpm.textContent = baseRpm;
+    }, 2500);
+
+    // Simulate temperature variation
+    let baseTemp = 41;
+    setInterval(() => {
+      baseTemp += Math.random() * 2 - 1;
+      baseTemp = Math.max(35, Math.min(52, baseTemp));
+      const t = Math.round(baseTemp);
+      tempVal.textContent = `${t}°C`;
+      // Color shift: green < 45, orange 45-55, red > 55
+      if (t >= 50) tempVal.style.color = '#FF453A';
+      else if (t >= 45) tempVal.style.color = '#FF9F0A';
+      else tempVal.style.color = '#FF9F0A';
+    }, 3000);
 
     // Update clock
     function updateClock() {
