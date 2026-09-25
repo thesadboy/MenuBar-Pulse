@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 public struct PreferencesView: View {
     @ObservedObject var prefs = PreferencesState.shared
     @ObservedObject var appState = AppState.shared
+    @ObservedObject var updater = UpdateManager.shared
     
     public init() {}
     
@@ -685,9 +686,37 @@ public struct PreferencesView: View {
             Text("MenuBar Pulse")
                 .font(.system(size: 20, weight: .bold))
             
-            Text("版本 1.0.0 (Build 20260918)")
+            let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+            Text("版本 \(currentVersion) (Build 20260918)")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
+            
+            // 检查更新区域
+            VStack(spacing: 6) {
+                if let status = updater.updateStatus {
+                    Text(status)
+                        .font(.system(size: 11))
+                        .foregroundColor(updater.newVersionURL != nil ? .green : .secondary)
+                }
+                
+                if let url = updater.newVersionURL {
+                    Button("立即下载更新") {
+                        NSWorkspace.shared.open(url)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                } else {
+                    Button(action: {
+                        updater.checkForUpdates()
+                    }) {
+                        Text(updater.isChecking ? "正在检查..." : "检查更新")
+                            .font(.system(size: 11))
+                    }
+                    .disabled(updater.isChecking)
+                    .controlSize(.small)
+                }
+            }
+            .frame(height: 40)
             
             Divider().padding(.horizontal, 40)
             
