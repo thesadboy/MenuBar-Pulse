@@ -324,6 +324,9 @@ public final class BatteryMonitor {
                 self.cachedLastChargeLevel = snapshot.percentage
                 UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "mbs_lastChargeTimestamp")
                 UserDefaults.standard.set(snapshot.percentage, forKey: "mbs_lastChargeLevel")
+                
+                // 异步从 pmset 修正精确拔出时间 (防止睡眠期间拔出导致 Date() 记录为唤醒时间)
+                self.fetchLastChargeFromPmset()
             } else if snapshot.isACConnected && snapshot.isCharging {
                 // 正在充电时持续保持时间与电量最新
                 let now = Date()
@@ -461,7 +464,12 @@ public final class BatteryMonitor {
                 if let unplug = lastUnplug {
                     DispatchQueue.main.async {
                         guard let self = self else { return }
-                        if self.cachedLastChargeDate == nil || unplug.date >= self.cachedLastChargeDate! {
+                        
+                        let isNewer = self.cachedLastChargeDate == nil || unplug.date >= self.cachedLastChargeDate!
+                        // 如果在睡眠期间拔下充电器，唤醒时记录的 Date() 会严重滞后。若相差超过 10 秒，信任系统底层日志的准确时间并予以覆盖纠正。
+                        let isSleepAnomaly = self.cachedLastChargeDate != nil && abs(unplug.date.timeIntervalSince(self.cachedLastChargeDate!)) > 10
+                        
+                        if isNewer || isSleepAnomaly {
                             self.cachedLastChargeDate = unplug.date
                             if let ch = unplug.charge, ch > 0 {
                                 self.cachedLastChargeLevel = ch
