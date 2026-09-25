@@ -696,12 +696,20 @@ public struct PreferencesView: View {
                 if let status = updater.updateStatus {
                     Text(status)
                         .font(.system(size: 11))
-                        .foregroundColor(updater.newVersionURL != nil ? .green : .secondary)
+                        .foregroundColor(updater.newVersionURL != nil && !updater.isDownloading ? .green : .secondary)
                 }
                 
-                if let url = updater.newVersionURL {
-                    Button("立即下载更新") {
-                        NSWorkspace.shared.open(url)
+                if updater.isDownloading {
+                    ProgressView(value: updater.downloadProgress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .frame(width: 150)
+                } else if let _ = updater.newVersionURL {
+                    Button(updater.downloadURL != nil ? "下载并安装更新" : "前往主页下载") {
+                        if updater.downloadURL != nil {
+                            updater.downloadAndInstall()
+                        } else if let url = updater.newVersionURL {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
@@ -716,7 +724,7 @@ public struct PreferencesView: View {
                     .controlSize(.small)
                 }
             }
-            .frame(height: 40)
+            .frame(height: 50)
             
             Divider().padding(.horizontal, 40)
             
