@@ -3,38 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MenuBar Pulse — 原生 macOS 极致低能耗状态栏监控中心</title>
-  <meta name="description" content="专为 macOS 打造的原生系统级极简、超低功耗菜单栏硬件监控与诊断工具。实时网络流速、内嵌胶囊电池、智能双风扇、10大分类硬件温度。" />
+  <title>MenuBar Pulse — 原生 macOS 极简低能耗状态栏监控中心</title>
+  <meta name="description" content="专为 macOS 打造的原生极简、超低功耗菜单栏硬件监控工具。实时网速、内嵌胶囊电池、智能风扇与 10 大硬件温控。" />
   <link rel="icon" type="image/png" href="app_icon.png" />
   
-  <!-- Modern Typography -->
+  <!-- Apple System Font & Inter Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <style>
     :root {
-      --bg-deep: #07090e;
-      --bg-surface: rgba(18, 22, 32, 0.7);
-      --bg-card: rgba(26, 32, 48, 0.55);
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(255, 255, 255, 0.2);
+      --bg-base: #090a0f;
+      --bg-surface: #11131a;
+      --bg-surface-elevated: #181b24;
+      --bg-surface-hover: #1e222e;
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-strong: rgba(255, 255, 255, 0.15);
+      --border-highlight: rgba(255, 255, 255, 0.25);
       
       --accent-blue: #0A84FF;
+      --accent-blue-hover: #0071E3;
       --accent-cyan: #30D158;
       --accent-orange: #FF9F0A;
       --accent-purple: #BF5AF2;
-      --accent-glow: rgba(10, 132, 255, 0.25);
       
-      --text-primary: #F5F5F7;
-      --text-secondary: #86868B;
-      --text-tertiary: #52525A;
+      --text-main: #EDEDF0;
+      --text-muted: #8E919D;
+      --text-faint: #555866;
       
-      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+      
+      --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     * {
@@ -43,58 +47,64 @@
       padding: 0;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      background-color: var(--bg-deep);
-      color: var(--text-primary);
-      font-family: var(--font-main);
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
       line-height: 1.6;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
-      selection-background-color: var(--accent-blue);
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Ambient Background Glow */
-    .ambient-glow-1 {
-      position: fixed;
-      top: -20%;
-      left: 20%;
-      width: 60vw;
-      height: 60vw;
-      background: radial-gradient(circle, rgba(10, 132, 255, 0.12) 0%, rgba(191, 90, 242, 0.05) 50%, transparent 70%);
-      filter: blur(80px);
-      z-index: -1;
+    /* Subtle background grid pattern - modern developer tool aesthetic */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      height: 1100px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 65% 50% at 50% 0%, #000 60%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 65% 50% at 50% 0%, #000 60%, transparent 100%);
       pointer-events: none;
-    }
-    
-    .ambient-glow-2 {
-      position: fixed;
-      bottom: -10%;
-      right: 10%;
-      width: 50vw;
-      height: 50vw;
-      background: radial-gradient(circle, rgba(48, 209, 88, 0.08) 0%, rgba(10, 132, 255, 0.04) 50%, transparent 70%);
-      filter: blur(100px);
-      z-index: -1;
-      pointer-events: none;
+      z-index: 0;
     }
 
-    /* Header Nav */
+    /* Top subtle rim light */
+    .hero-top-glow {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 380px;
+      background: radial-gradient(circle at 50% 0%, rgba(10, 132, 255, 0.14) 0%, rgba(10, 132, 255, 0.02) 65%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Nav Header */
     header {
       position: sticky;
       top: 0;
       width: 100%;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background: rgba(7, 9, 14, 0.75);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(9, 10, 15, 0.82);
       border-bottom: 1px solid var(--border-subtle);
       z-index: 100;
-      transition: border-color 0.3s ease;
     }
 
     .nav-container {
-      max-width: 1200px;
+      max-width: 1160px;
       margin: 0 auto;
-      padding: 1rem 1.5rem;
+      padding: 0.9rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -105,209 +115,263 @@
       align-items: center;
       gap: 0.75rem;
       text-decoration: none;
-      color: var(--text-primary);
-      font-weight: 700;
-      font-size: 1.15rem;
-      letter-spacing: -0.02em;
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
     }
 
     .brand-logo img {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .version-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-blue);
+      background: rgba(10, 132, 255, 0.12);
+      border: 1px solid rgba(10, 132, 255, 0.28);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 500;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 2rem;
+      gap: 1.8rem;
       list-style: none;
     }
 
     .nav-links a {
-      color: var(--text-secondary);
+      color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 500;
-      transition: color 0.2s ease;
+      transition: color 0.15s ease;
     }
 
     .nav-links a:hover {
-      color: var(--text-primary);
+      color: var(--text-main);
     }
 
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.6rem 1.25rem;
-      border-radius: 9999px;
-      font-size: 0.92rem;
-      font-weight: 600;
+      padding: 0.55rem 1.15rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
       text-decoration: none;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.2s var(--ease-apple);
       cursor: pointer;
+      border: none;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
-      color: #fff;
-      box-shadow: 0 4px 18px rgba(10, 132, 255, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #FFFFFF;
+      color: #000000;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(255, 255, 255, 0.12);
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(10, 132, 255, 0.5);
+      background: #E5E5E7;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(255, 255, 255, 0.18);
     }
 
     .btn-secondary {
-      background: var(--bg-card);
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
       border: 1px solid var(--border-subtle);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--border-strong);
       transform: translateY(-1px);
     }
 
     /* Hero Section */
     .hero {
-      max-width: 1200px;
+      position: relative;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 5rem 1.5rem 3rem;
+      padding: 4.8rem 1.5rem 3rem;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
+      z-index: 1;
     }
 
-    .badge-pill {
+    .release-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.4rem 1rem;
-      background: rgba(10, 132, 255, 0.1);
-      border: 1px solid rgba(10, 132, 255, 0.3);
-      border-radius: 9999px;
-      font-size: 0.85rem;
-      color: #64D2FF;
-      margin-bottom: 1.5rem;
-      font-weight: 500;
-      box-shadow: 0 0 20px rgba(10, 132, 255, 0.15);
+      padding: 0.35rem 0.85rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 1.8rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
     }
 
-    .badge-pill i {
-      font-size: 1rem;
+    .release-badge:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-highlight);
+      color: var(--text-main);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #30D158;
+      box-shadow: 0 0 8px rgba(48, 209, 88, 0.8);
     }
 
     .hero h1 {
-      font-size: clamp(2.5rem, 5.5vw, 4.5rem);
-      font-weight: 800;
+      font-size: clamp(2.3rem, 5vw, 3.9rem);
+      font-weight: 700;
       letter-spacing: -0.04em;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-      max-width: 900px;
-      background: linear-gradient(180deg, #FFFFFF 20%, #A1A1A6 100%);
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+      max-width: 820px;
+      color: #FFFFFF;
+    }
+
+    .hero h1 span.gradient-text {
+      background: linear-gradient(180deg, #FFFFFF 30%, #9EA2B0 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .hero p {
-      font-size: clamp(1.05rem, 2vw, 1.25rem);
-      color: var(--text-secondary);
-      max-width: 720px;
-      margin-bottom: 2.5rem;
-      font-weight: 400;
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
+      color: var(--text-muted);
+      max-width: 660px;
+      margin-bottom: 2.2rem;
+      line-height: 1.65;
     }
 
     .hero-cta {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.85rem;
       justify-content: center;
+      margin-bottom: 2.8rem;
+    }
+
+    .hero-btn-main {
+      padding: 0.75rem 1.6rem;
+      font-size: 0.96rem;
+      gap: 0.6rem;
+    }
+
+    /* Key spec pill row */
+    .spec-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.5rem 2.2rem;
+      padding: 1rem 1.8rem;
+      background: rgba(17, 19, 26, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      backdrop-filter: blur(12px);
       margin-bottom: 3.5rem;
     }
 
-    .hero-stats {
+    .spec-item {
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 3rem;
-      padding: 1.5rem 2.5rem;
-      background: rgba(18, 22, 32, 0.5);
-      border: 1px solid var(--border-subtle);
-      border-radius: 20px;
-      backdrop-filter: blur(12px);
-      margin-bottom: 4rem;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.84rem;
+      color: var(--text-muted);
     }
 
-    .stat-item {
-      text-align: left;
-    }
-
-    .stat-val {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      display: flex;
-      align-items: baseline;
-      gap: 0.2rem;
-    }
-
-    .stat-val span {
-      font-size: 1rem;
-      color: var(--accent-cyan);
+    .spec-item strong {
+      color: var(--text-main);
       font-weight: 600;
+      font-family: var(--font-mono);
     }
 
-    .stat-label {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
+    .spec-divider {
+      width: 1px;
+      height: 16px;
+      background: var(--border-subtle);
     }
 
-    /* Live Interactive Simulator Section */
-    .simulator-wrapper {
-      max-width: 1000px;
+    /* Interactive Live Simulator */
+    .simulator-container {
+      max-width: 1040px;
       width: 100%;
-      margin: 0 auto 6rem;
-      perspective: 1200px;
+      margin: 0 auto 5.5rem;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
     }
 
-    .mac-desktop {
-      background: radial-gradient(circle at 50% 30%, #1e2840 0%, #0d121c 100%);
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    .mac-window {
+      background: #0D0F15;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
       overflow: hidden;
       position: relative;
       min-height: 480px;
     }
 
+    /* Realistic macOS desktop canvas */
+    .mac-desktop-canvas {
+      position: relative;
+      min-height: 480px;
+      background: linear-gradient(135deg, #0b1424 0%, #0d1a2d 40%, #09111c 100%);
+      overflow: hidden;
+    }
+
+    /* Subtle blurred desktop wallpaper accent */
+    .desktop-wallpaper-accent {
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(10, 132, 255, 0.18) 0%, rgba(191, 90, 242, 0.08) 45%, transparent 70%);
+      filter: blur(70px);
+      pointer-events: none;
+    }
+
     /* Simulated macOS Menu Bar */
     .simulated-menubar {
-      height: 32px;
-      background: rgba(20, 24, 35, 0.85);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
+      height: 30px;
+      background: rgba(18, 20, 28, 0.78);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 1rem;
-      font-size: 0.82rem;
-      color: #fff;
+      padding: 0 0.85rem;
+      font-size: 0.8rem;
+      color: #FFFFFF;
       user-select: none;
       z-index: 10;
       position: relative;
@@ -316,44 +380,60 @@
     .menubar-left {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      gap: 1.1rem;
+      font-weight: 500;
+    }
+
+    .apple-icon {
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+
+    .app-title {
       font-weight: 600;
     }
 
-    .menubar-left i {
-      font-size: 0.95rem;
+    .menu-item-dim {
+      opacity: 0.75;
+      font-weight: 400;
+      font-size: 0.78rem;
     }
 
     .menubar-right {
       display: flex;
       align-items: center;
-      gap: 0.85rem;
+      gap: 0.4rem;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
 
-    /* Interactive MenuBarPulse Status Items - Separate modules like real app */
     .menubar-pulse-item {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 2px 6px;
-      border-radius: 4px;
+      gap: 5px;
+      padding: 2px 7px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: all 0.15s ease;
-      font-size: 10px;
+      transition: background 0.15s ease;
+      font-size: 10.5px;
       white-space: nowrap;
+      border: 1px solid transparent;
     }
 
-    .menubar-pulse-item:hover, .menubar-pulse-item.active {
-      background: rgba(255, 255, 255, 0.15);
+    .menubar-pulse-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .menubar-pulse-item.active {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.12);
     }
 
     .net-stack {
       display: flex;
       flex-direction: column;
       gap: 0px;
-      line-height: 1.15;
+      line-height: 1.12;
       font-family: var(--font-mono);
       font-size: 9px;
     }
@@ -365,77 +445,93 @@
     }
 
     .net-arrow {
-      font-size: 7px;
+      font-size: 7.5px;
       font-weight: bold;
     }
 
     .arrow-up { color: #FF9F0A; }
     .arrow-down { color: #0A84FF; }
 
-    /* Battery capsule inline style */
+    /* Battery capsule */
     .bat-capsule {
       display: inline-flex;
       align-items: center;
-      width: 22px;
-      height: 11px;
-      border: 1.2px solid rgba(255, 255, 255, 0.75);
+      width: 20px;
+      height: 10.5px;
+      border: 1.2px solid rgba(255, 255, 255, 0.8);
       border-radius: 2.5px;
       position: relative;
       overflow: hidden;
+      padding: 0.8px;
     }
 
     .bat-capsule::after {
       content: '';
       position: absolute;
-      right: -3.5px;
+      right: -3px;
       top: 50%;
       transform: translateY(-50%);
-      width: 2px;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.75);
+      width: 1.8px;
+      height: 4.5px;
+      background: rgba(255, 255, 255, 0.8);
       border-radius: 0 1px 1px 0;
     }
 
     .bat-fill {
       height: 100%;
-      background: #34C759;
-      border-radius: 1.5px;
-      transition: width 0.5s ease;
+      background: #30D158;
+      border-radius: 1.2px;
+      transition: width 0.4s ease;
     }
 
     .bat-bolt {
-      font-size: 7px;
-      color: #34C759;
+      font-size: 8px;
+      color: #30D158;
     }
 
-    /* Fan spin animation */
     @keyframes fanSpin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
 
     .fan-spinning {
-      animation: fanSpin 0.6s linear infinite;
+      animation: fanSpin 0.8s linear infinite;
       display: inline-block;
     }
 
-    /* Simulated Popover Dashboard */
+    .menubar-sep {
+      width: 1px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      margin: 0 2px;
+    }
+
+    .tray-icons {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-left: 0.3rem;
+      opacity: 0.85;
+      font-size: 0.85rem;
+    }
+
+    /* Popover Dashboard */
     .simulated-popover {
       position: absolute;
       top: 36px;
-      right: 100px;
-      width: 280px;
-      background: rgba(28, 33, 46, 0.92);
-      backdrop-filter: blur(35px);
-      -webkit-backdrop-filter: blur(35px);
-      border-radius: 14px;
+      right: 90px;
+      width: 290px;
+      background: rgba(24, 27, 36, 0.94);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 1px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);
       z-index: 20;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.25s var(--ease-apple);
       opacity: 0;
-      transform: translateY(-8px) scale(0.97);
+      transform: translateY(-6px) scale(0.98);
       pointer-events: none;
     }
 
@@ -446,7 +542,7 @@
     }
 
     .popover-header {
-      padding: 8px 12px;
+      padding: 9px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -456,29 +552,29 @@
     }
 
     .popover-content {
-      padding: 8px 10px;
+      padding: 9px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       max-height: 380px;
       overflow-y: auto;
     }
 
     .card-box {
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.035);
+      border-radius: 9px;
       padding: 8px 10px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .card-title {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
-      color: #fff;
+      margin-bottom: 5px;
+      color: #FFFFFF;
     }
 
     .card-rows {
@@ -486,7 +582,7 @@
       flex-direction: column;
       gap: 3px;
       font-size: 0.72rem;
-      color: var(--text-secondary);
+      color: var(--text-muted);
     }
 
     .card-row-item {
@@ -496,264 +592,466 @@
     }
 
     .card-row-item span:last-child {
-      color: var(--text-primary);
+      color: var(--text-main);
       font-family: var(--font-mono);
       font-size: 0.7rem;
     }
 
     .desktop-hint {
       position: absolute;
-      bottom: 20px;
+      bottom: 18px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(14, 16, 23, 0.85);
+      border: 1px solid var(--border-strong);
       padding: 6px 14px;
       border-radius: 20px;
-      font-size: 0.82rem;
-      color: var(--text-secondary);
+      font-size: 0.8rem;
+      color: var(--text-muted);
       pointer-events: none;
       display: flex;
       align-items: center;
       gap: 6px;
+      backdrop-filter: blur(10px);
     }
 
-    /* Menubar separator dot */
-    .menubar-sep {
-      width: 1px;
-      height: 14px;
-      background: rgba(255, 255, 255, 0.15);
-      margin: 0 2px;
-    }
-
-
-    /* Bento Grid Feature Section */
-    .section-title {
-      text-align: center;
-      margin-bottom: 3.5rem;
-    }
-
-    .section-title h2 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 0.75rem;
-    }
-
-    .section-title p {
-      color: var(--text-secondary);
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .bento-grid {
-      max-width: 1200px;
-      margin: 0 auto 6rem;
-      padding: 0 1.5rem;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-    }
-
-    .bento-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 24px;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Section Shared Styling */
+    section {
       position: relative;
-      overflow: hidden;
+      z-index: 1;
     }
 
-    .bento-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-4px);
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+    .section-header {
+      text-align: center;
+      margin-bottom: 3.2rem;
     }
 
-    .bento-card.col-span-2 {
-      grid-column: span 2;
-    }
-
-    .bento-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: rgba(10, 132, 255, 0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .section-eyebrow {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: var(--accent-blue);
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
     }
 
-    .bento-icon.green {
-      background: rgba(48, 209, 88, 0.12);
-      color: var(--accent-cyan);
-    }
-
-    .bento-icon.orange {
-      background: rgba(255, 159, 10, 0.12);
-      color: var(--accent-orange);
-    }
-
-    .bento-icon.purple {
-      background: rgba(191, 90, 242, 0.12);
-      color: var(--accent-purple);
-    }
-
-    .bento-card h3 {
-      font-size: 1.35rem;
+    .section-title {
+      font-size: clamp(1.8rem, 3.2vw, 2.4rem);
       font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
       margin-bottom: 0.75rem;
-      letter-spacing: -0.02em;
     }
 
-    .bento-card p {
-      color: var(--text-secondary);
-      font-size: 0.95rem;
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      max-width: 580px;
+      margin: 0 auto;
       line-height: 1.6;
     }
 
-    .bento-visual {
-      margin-top: 1.5rem;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 1.25rem;
+    /* Clean Modern Features Grid */
+    .features-container {
+      max-width: 1140px;
+      margin: 0 auto 6.5rem;
+      padding: 0 1.5rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .feature-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s var(--ease-apple);
+    }
+
+    .feature-card:hover {
+      background: var(--bg-surface-elevated);
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+
+    .feature-card.col-span-2 {
+      grid-column: span 2;
+    }
+
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-icon-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--text-main);
+      flex-shrink: 0;
+    }
+
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .feature-preview {
+      margin-top: 1.4rem;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
       border: 1px solid rgba(255, 255, 255, 0.05);
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     /* Comparison Section */
-    .compare-section {
-      max-width: 1000px;
-      margin: 0 auto 6rem;
+    .compare-container {
+      max-width: 980px;
+      margin: 0 auto 6.5rem;
       padding: 0 1.5rem;
+    }
+
+    .table-wrapper {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
     }
 
     .compare-table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--bg-surface);
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid var(--border-subtle);
+      text-align: left;
     }
 
     .compare-table th, .compare-table td {
-      padding: 1.25rem 1.5rem;
-      text-align: left;
+      padding: 1.1rem 1.4rem;
       border-bottom: 1px solid var(--border-subtle);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .compare-table th {
       background: rgba(255, 255, 255, 0.02);
-      color: var(--text-secondary);
-      font-weight: 600;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .compare-table tr:last-child td {
       border-bottom: none;
     }
 
-    .highlight-cell {
-      color: var(--accent-cyan);
-      font-weight: 700;
-      font-family: var(--font-mono);
+    .highlight-brand {
+      color: #FFFFFF;
+      font-weight: 600;
     }
 
-    /* Code Terminal block */
-    .code-block {
-      background: #0D1117;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 14px;
-      padding: 1.25rem 1.5rem;
+    .highlight-val {
+      color: #30D158;
       font-family: var(--font-mono);
-      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    /* Installation Section */
+    .install-container {
+      max-width: 980px;
+      margin: 0 auto 6.5rem;
+      padding: 0 1.5rem;
+    }
+
+    .install-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .install-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease;
+    }
+
+    .install-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .install-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: #79C0FF;
-      max-width: 650px;
-      margin: 2rem auto;
+      margin-bottom: 1.4rem;
+    }
+
+    .install-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .install-badge.rec {
+      background: rgba(48, 209, 88, 0.12);
+      color: #30D158;
+      border: 1px solid rgba(48, 209, 88, 0.25);
+    }
+
+    .install-badge.dev {
+      background: rgba(191, 90, 242, 0.12);
+      color: #BF5AF2;
+      border: 1px solid rgba(191, 90, 242, 0.25);
+    }
+
+    .install-card h3 {
+      font-size: 1.12rem;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .install-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-text {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .step-text strong {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .code-inline {
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #D1D5DB;
+    }
+
+    /* Terminal command box */
+    .terminal-box {
+      background: #0D0F15;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #93C5FD;
+      margin-top: 0.6rem;
     }
 
     .copy-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.8rem;
-      transition: background 0.2s;
+      font-size: 0.74rem;
+      font-family: var(--font-sans);
+      transition: background 0.15s ease;
+      white-space: nowrap;
     }
 
     .copy-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    /* System Requirements Bar */
+    .sys-specs-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.4rem 1.8rem;
+    }
+
+    .sys-specs-box h4 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .specs-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+
+    .spec-col-label {
+      color: var(--text-faint);
+      font-size: 0.78rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .spec-col-val {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
     }
 
     /* Footer */
     footer {
       border-top: 1px solid var(--border-subtle);
-      padding: 3rem 1.5rem;
+      padding: 3.5rem 1.5rem 4rem;
       text-align: center;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      position: relative;
+      z-index: 1;
     }
 
-    footer a {
-      color: var(--text-primary);
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.8rem;
+      margin-bottom: 1.4rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
       text-decoration: none;
+      font-size: 0.88rem;
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-main);
     }
 
     /* Responsive */
-    @media (max-width: 860px) {
-      .bento-grid {
+    @media (max-width: 900px) {
+      .features-grid {
         grid-template-columns: 1fr;
       }
-      .bento-card.col-span-2 {
+      .feature-card.col-span-2 {
         grid-column: span 1;
+      }
+      .install-grid {
+        grid-template-columns: 1fr;
+      }
+      .specs-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
       }
       .nav-links {
         display: none;
       }
       .simulated-popover {
-        right: 20px;
+        right: 15px;
+        width: calc(100% - 30px);
+        max-width: 320px;
       }
     }
   </style>
 </head>
 <body>
 
-  <div class="ambient-glow-1"></div>
-  <div class="ambient-glow-2"></div>
+  <!-- Background Grid & Top Ambient Lighting -->
+  <div class="bg-grid"></div>
+  <div class="hero-top-glow"></div>
 
-  <!-- Header -->
+  <!-- Header Nav -->
   <header>
     <div class="nav-container">
       <a href="#" class="brand-logo">
-        <img src="app_icon.png" alt="Logo" />
+        <img src="app_icon.png" alt="MenuBar Pulse Icon" />
         <span>MenuBar Pulse</span>
+        <span class="version-tag">v1.1.1</span>
       </a>
+      
       <ul class="nav-links">
         <li><a href="#features">功能特性</a></li>
-        <li><a href="#simulator">实时体验</a></li>
-        <li><a href="#performance">极致能耗</a></li>
+        <li><a href="#simulator">在线预览</a></li>
+        <li><a href="#performance">性能基准</a></li>
         <li><a href="#installation">安装指南</a></li>
       </ul>
+
       <div class="nav-actions">
         <a href="https://github.com/thesadboy/MenuBar-Pulse" target="_blank" class="btn btn-secondary">
           <i class="ph-bold ph-github-logo"></i> GitHub
         </a>
-        <a href="https://github.com/thesadboy/MenuBar-Pulse/releases" class="btn btn-primary">
+        <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" class="btn btn-primary">
           <i class="ph-bold ph-download-simple"></i> 下载 DMG
         </a>
       </div>
@@ -762,291 +1060,348 @@
 
   <!-- Hero Section -->
   <section class="hero">
-    <div class="badge-pill">
-      <i class="ph-fill ph-lightning"></i> macOS 原生 Swift 5.9+ • 闲置能耗降幅 > 98%
-    </div>
-    <h1>The Pulse of Your Mac,<br>Right on the Menu Bar.</h1>
+    <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" class="release-badge">
+      <span class="badge-dot"></span>
+      <span>MenuBar Pulse 1.1.1 现已发布</span>
+      <i class="ph ph-arrow-right" style="font-size: 0.8rem;"></i>
+    </a>
+
+    <h1>
+      轻量，克制，原生。<br>
+      <span class="gradient-text">重新定义你的 Mac 状态栏。</span>
+    </h1>
+
     <p>
-      专为 Apple Silicon 与 macOS 设计的超轻量状态栏诊断中心。以微秒级内核响应呈现精确网络上下行流速、内嵌胶囊电池寿命、智能散热风扇与 10 大硬件温控矩阵。
+      专为 macOS 打造的高性能菜单栏硬件监控工具。纯原生 Swift & SwiftUI 编写，零第三方依赖。实时洞察网络速率、电量健康度、风扇转速与硬件温度，常驻整机能耗低于 0.1%。
     </p>
-    
+
     <div class="hero-cta">
-      <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
-        <i class="ph-bold ph-apple-logo"></i> 下载 MenuBarPulse.dmg (v1.1.1)
+      <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" class="btn btn-primary hero-btn-main">
+        <i class="ph-bold ph-apple-logo"></i> 下载 DMG 安装包
       </a>
-      <a href="#simulator" class="btn btn-secondary" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
+      <a href="#simulator" class="btn btn-secondary hero-btn-main">
         <i class="ph-bold ph-play-circle"></i> 在线交互体验
       </a>
     </div>
 
-    <div class="hero-stats">
-      <div class="stat-item">
-        <div class="stat-val">0.0% ~ 0.7%</div>
-        <div class="stat-label">单核运行负载（整机仅 0.07%）</div>
+    <!-- Clean Specs Bar -->
+    <div class="spec-bar">
+      <div class="spec-item">
+        <span>架构</span>
+        <strong>Apple Silicon & Intel</strong>
       </div>
-      <div class="stat-item">
-        <div class="stat-val">3 <span>次/秒</span></div>
-        <div class="stat-label">闲置唤醒频率（99.6% 深度睡眠）</div>
+      <div class="spec-divider"></div>
+      <div class="spec-item">
+        <span>整机负载</span>
+        <strong>~0.07% CPU</strong>
       </div>
-      <div class="stat-item">
-        <div class="stat-val">2.3 <span>MB</span></div>
-        <div class="stat-label">极轻量纯原生二进制体积</div>
+      <div class="spec-divider"></div>
+      <div class="spec-item">
+        <span>闲置唤醒</span>
+        <strong>3 次/秒</strong>
       </div>
-    </div>
-  </section>
-
-  <!-- Interactive Live Simulator -->
-  <section class="simulator-wrapper" id="simulator">
-    <div class="mac-desktop">
-      <!-- MenuBar -->
-      <div class="simulated-menubar">
-        <div class="menubar-left">
-          <i class="ph-fill ph-apple-logo"></i>
-          <span>Finder</span>
-          <span style="opacity: 0.6; font-weight: 400;">文件</span>
-          <span style="opacity: 0.6; font-weight: 400;">编辑</span>
-          <span style="opacity: 0.6; font-weight: 400;">视图</span>
-        </div>
-
-        <div class="menubar-right">
-          <!-- MenuBarPulse: Network Module -->
-          <div class="menubar-pulse-item active" id="menuItem" title="点击展开/收起浮动面板">
-            <div class="net-stack">
-              <div class="net-row">
-                <span class="net-arrow arrow-up">▲</span>
-                <span id="liveUpSpeed" style="width: 46px; text-align: right;">1.2 KB/s</span>
-              </div>
-              <div class="net-row">
-                <span class="net-arrow arrow-down">▼</span>
-                <span id="liveDownSpeed" style="width: 46px; text-align: right;">8.4 KB/s</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="menubar-sep"></div>
-
-          <!-- MenuBarPulse: Battery Module -->
-          <div class="menubar-pulse-item" id="menuItemBat" title="电池模块">
-            <div class="bat-capsule">
-              <div class="bat-fill" id="batFill" style="width: 98%;"></div>
-            </div>
-            <span class="bat-bolt">⚡</span>
-            <span style="font-family: var(--font-mono); font-size: 9.5px; color: #34C759;" id="batPercent">98%</span>
-          </div>
-
-          <div class="menubar-sep"></div>
-
-          <!-- MenuBarPulse: Fan Module -->
-          <div class="menubar-pulse-item" id="menuItemFan" title="风扇模块">
-            <span class="fan-spinning" style="font-size: 11px; color: #BF5AF2;">⟳</span>
-            <span style="font-family: var(--font-mono); font-size: 9.5px; color: #E5E5EA;" id="fanRpm">1850</span>
-          </div>
-
-          <div class="menubar-sep"></div>
-
-          <!-- MenuBarPulse: Temperature Module -->
-          <div class="menubar-pulse-item" id="menuItemTemp" title="温度模块">
-            <span style="font-size: 10px;">🌡</span>
-            <span style="font-family: var(--font-mono); font-size: 9.5px; color: #FF9F0A;" id="tempVal">41°C</span>
-          </div>
-
-          <div class="menubar-sep"></div>
-
-          <!-- macOS system tray icons -->
-          <span><i class="ph-bold ph-wifi-high"></i></span>
-          <span><i class="ph-bold ph-magnifying-glass"></i></span>
-          <span><i class="ph-bold ph-sliders"></i></span>
-          <span id="liveClock" style="font-size: 0.8rem; font-weight: 500; font-family: var(--font-main);">16:30</span>
-        </div>
-      </div>
-
-      <!-- Popover View -->
-      <div class="simulated-popover visible" id="popover">
-        <div class="popover-header">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <i class="ph-fill ph-gauge" style="color: #0A84FF;"></i>
-            <span>综合监控面板</span>
-          </div>
-          <div style="display: flex; gap: 8px; color: var(--text-secondary);">
-            <i class="ph-fill ph-push-pin" style="color: #0A84FF;" title="已固定置顶"></i>
-            <i class="ph-fill ph-gear" title="偏好设置"></i>
-          </div>
-        </div>
-
-        <div class="popover-content">
-          <!-- Network Card -->
-          <div class="card-box">
-            <div class="card-title">
-              <span><i class="ph-bold ph-wifi-high" style="color: #0A84FF;"></i> Wi-Fi (en0)</span>
-              <span style="font-size: 10px; color: #30D158;">已连接</span>
-            </div>
-            <div class="card-rows">
-              <div class="card-row-item">
-                <span>上传速率</span>
-                <span id="cardUpSpeed">1.2 KB/s | 1.84 GB</span>
-              </div>
-              <div class="card-row-item">
-                <span>下载速率</span>
-                <span id="cardDownSpeed">8.4 KB/s | 14.62 GB</span>
-              </div>
-              <div class="card-row-item">
-                <span>本机 IP</span>
-                <span>192.168.1.108</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Battery Card -->
-          <div class="card-box">
-            <div class="card-title">
-              <span><i class="ph-fill ph-battery-charging" style="color: #30D158;"></i> 内建电池</span>
-              <span style="color: #30D158;">98% ⚡</span>
-            </div>
-            <div class="card-rows">
-              <div class="card-row-item">
-                <span>电池健康寿命</span>
-                <span>99.2% (正常)</span>
-              </div>
-              <div class="card-row-item">
-                <span>循环计数</span>
-                <span>46 次</span>
-              </div>
-              <div class="card-row-item">
-                <span>供电状态</span>
-                <span>已连接电源 (已充满)</span>
-              </div>
-              <div class="card-row-item">
-                <span>出厂使用时长</span>
-                <span>约 7 个月</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Fan Card -->
-          <div class="card-box">
-            <div class="card-title">
-              <span><i class="ph-bold ph-fan" style="color: #BF5AF2;"></i> 散热风扇</span>
-              <span>1850 / 1900 rpm</span>
-            </div>
-            <div class="card-rows">
-              <div class="card-row-item">
-                <span>左侧风扇 (L)</span>
-                <span>1850 rpm (35%)</span>
-              </div>
-              <div class="card-row-item">
-                <span>右侧风扇 (R)</span>
-                <span>1900 rpm (38%)</span>
-              </div>
-              <div class="card-row-item">
-                <span>系统热压力</span>
-                <span>正常 (Nominal)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Temp Card -->
-          <div class="card-box">
-            <div class="card-title">
-              <span><i class="ph-fill ph-thermometer" style="color: #FF9F0A;"></i> 硬件温度</span>
-              <span>41°C (均温)</span>
-            </div>
-            <div class="card-rows">
-              <div class="card-row-item">
-                <span>中央处理器</span>
-                <span>41°C (峰值 45°C)</span>
-              </div>
-              <div class="card-row-item">
-                <span>图形处理器</span>
-                <span>39°C</span>
-              </div>
-              <div class="card-row-item">
-                <span>固态硬盘 (SSD)</span>
-                <span>34°C</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="desktop-hint">
-        <i class="ph-bold ph-cursor-click"></i> 点击菜单栏组件可实时切换弹窗展开 / 收起
+      <div class="spec-divider"></div>
+      <div class="spec-item">
+        <span>体积</span>
+        <strong>2.3 MB 纯原生</strong>
       </div>
     </div>
   </section>
 
-  <!-- Features Bento Grid -->
-  <section class="bento-container" id="features">
-    <div class="section-title">
-      <h2>模块化系统设计，为专业 Mac 用户打造</h2>
-      <p>每个模块均支持独立启用、独立排序与专属定制，完全融入 macOS 人机交互指南。</p>
+  <!-- Interactive macOS MenuBar Simulator -->
+  <section class="simulator-container" id="simulator">
+    <div class="mac-window">
+      <!-- Simulated Canvas -->
+      <div class="mac-desktop-canvas">
+        <div class="desktop-wallpaper-accent"></div>
+
+        <!-- Simulated Menu Bar -->
+        <div class="simulated-menubar">
+          <div class="menubar-left">
+            <span class="apple-icon"><i class="ph-fill ph-apple-logo"></i></span>
+            <span class="app-title">Finder</span>
+            <span class="menu-item-dim">文件</span>
+            <span class="menu-item-dim">编辑</span>
+            <span class="menu-item-dim">显示</span>
+            <span class="menu-item-dim">前往</span>
+            <span class="menu-item-dim">窗口</span>
+          </div>
+
+          <div class="menubar-right">
+            <!-- 1. Network Pulse -->
+            <div class="menubar-pulse-item active" id="menuItem" title="点击展开/收起浮动面板">
+              <div class="net-stack">
+                <div class="net-row">
+                  <span class="net-arrow arrow-up">▲</span>
+                  <span id="liveUpSpeed" style="width: 44px; text-align: right;">1.2 KB/s</span>
+                </div>
+                <div class="net-row">
+                  <span class="net-arrow arrow-down">▼</span>
+                  <span id="liveDownSpeed" style="width: 44px; text-align: right;">8.4 KB/s</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="menubar-sep"></div>
+
+            <!-- 2. Battery -->
+            <div class="menubar-pulse-item" id="menuItemBat" title="电池模块">
+              <div class="bat-capsule">
+                <div class="bat-fill" id="batFill" style="width: 98%;"></div>
+              </div>
+              <span class="bat-bolt">⚡</span>
+              <span style="font-size: 9.5px; color: #30D158;" id="batPercent">98%</span>
+            </div>
+
+            <div class="menubar-sep"></div>
+
+            <!-- 3. Fan -->
+            <div class="menubar-pulse-item" id="menuItemFan" title="风扇模块">
+              <span class="fan-spinning" style="font-size: 11px; color: #BF5AF2;">⟳</span>
+              <span style="font-size: 9.5px; color: #E5E5EA;" id="fanRpm">1850</span>
+            </div>
+
+            <div class="menubar-sep"></div>
+
+            <!-- 4. Temperature -->
+            <div class="menubar-pulse-item" id="menuItemTemp" title="温度模块">
+              <span style="font-size: 10px;">🌡</span>
+              <span style="font-size: 9.5px; color: #FF9F0A;" id="tempVal">41°C</span>
+            </div>
+
+            <div class="menubar-sep"></div>
+
+            <!-- macOS System Status Icons -->
+            <div class="tray-icons">
+              <i class="ph-bold ph-wifi-high"></i>
+              <i class="ph-bold ph-magnifying-glass"></i>
+              <i class="ph-bold ph-sliders"></i>
+              <span id="liveClock" style="font-size: 0.78rem; font-family: var(--font-sans); font-weight: 500;">16:30</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulated Popover Dashboard -->
+        <div class="simulated-popover visible" id="popover">
+          <div class="popover-header">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i class="ph-bold ph-gauge" style="color: var(--accent-blue);"></i>
+              <span>综合监控面板</span>
+            </div>
+            <div style="display: flex; gap: 8px; color: var(--text-muted);">
+              <i class="ph-fill ph-push-pin" style="color: var(--accent-blue);" title="已固定置顶"></i>
+              <i class="ph-bold ph-gear" title="偏好设置"></i>
+            </div>
+          </div>
+
+          <div class="popover-content">
+            <!-- Card 1: Network -->
+            <div class="card-box">
+              <div class="card-title">
+                <span><i class="ph-bold ph-wifi-high" style="color: var(--accent-blue);"></i> Wi-Fi (en0)</span>
+                <span style="font-size: 10px; color: #30D158;">已连接</span>
+              </div>
+              <div class="card-rows">
+                <div class="card-row-item">
+                  <span>上传速率</span>
+                  <span id="cardUpSpeed">1.2 KB/s | 1.84 GB</span>
+                </div>
+                <div class="card-row-item">
+                  <span>下载速率</span>
+                  <span id="cardDownSpeed">8.4 KB/s | 14.62 GB</span>
+                </div>
+                <div class="card-row-item">
+                  <span>本机 IP</span>
+                  <span>192.168.1.108</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Battery -->
+            <div class="card-box">
+              <div class="card-title">
+                <span><i class="ph-bold ph-battery-charging" style="color: #30D158;"></i> 内建电池</span>
+                <span style="color: #30D158;">98% ⚡</span>
+              </div>
+              <div class="card-rows">
+                <div class="card-row-item">
+                  <span>真实健康寿命</span>
+                  <span>99.2% (正常)</span>
+                </div>
+                <div class="card-row-item">
+                  <span>循环计数</span>
+                  <span>46 次</span>
+                </div>
+                <div class="card-row-item">
+                  <span>供电状态</span>
+                  <span>已连接电源 (已充满)</span>
+                </div>
+                <div class="card-row-item">
+                  <span>出厂使用时长</span>
+                  <span>约 7 个月</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Fan -->
+            <div class="card-box">
+              <div class="card-title">
+                <span><i class="ph-bold ph-fan" style="color: #BF5AF2;"></i> 散热风扇</span>
+                <span>1850 / 1900 rpm</span>
+              </div>
+              <div class="card-rows">
+                <div class="card-row-item">
+                  <span>左风扇 (L)</span>
+                  <span>1850 rpm (35%)</span>
+                </div>
+                <div class="card-row-item">
+                  <span>右风扇 (R)</span>
+                  <span>1900 rpm (38%)</span>
+                </div>
+                <div class="card-row-item">
+                  <span>系统热压力</span>
+                  <span>正常 (Nominal)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Temperature -->
+            <div class="card-box">
+              <div class="card-title">
+                <span><i class="ph-bold ph-thermometer" style="color: #FF9F0A;"></i> 核心温度</span>
+                <span>41°C (均温)</span>
+              </div>
+              <div class="card-rows">
+                <div class="card-row-item">
+                  <span>CPU 核心</span>
+                  <span>41°C (峰值 45°C)</span>
+                </div>
+                <div class="card-row-item">
+                  <span>GPU 图形核心</span>
+                  <span>39°C</span>
+                </div>
+                <div class="card-row-item">
+                  <span>固态硬盘 (SSD)</span>
+                  <span>34°C</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="desktop-hint">
+          <i class="ph-bold ph-cursor-click"></i> 点击菜单栏图标可交互展开或收起浮动面板
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-container" id="features">
+    <div class="section-header">
+      <div class="section-eyebrow">Features</div>
+      <h2 class="section-title">模块化设计，无感融入 macOS</h2>
+      <p class="section-desc">每一项监控均可独立启闭与拖拽排序，精准呈现关键指标，拒绝冗余与打扰。</p>
     </div>
 
-    <div class="bento-grid">
+    <div class="features-grid">
       <!-- 1. Network -->
-      <div class="bento-card col-span-2">
+      <div class="feature-card col-span-2">
         <div>
-          <div class="bento-icon">
-            <i class="ph-bold ph-arrows-down-up"></i>
+          <div class="feature-header">
+            <div class="feature-icon-badge">
+              <i class="ph-bold ph-arrows-down-up"></i>
+            </div>
+            <div>
+              <h3>实时网络流速 (Network Pulse)</h3>
+              <div style="font-size: 0.8rem; color: var(--text-faint);">内核级精准采样，告别 32 位流量溢出</div>
+            </div>
           </div>
-          <h3>实时网络脉冲 (Network Pulse)</h3>
           <p>
-            基于 64 位内核路由接口 <code>sysctl (NET_RT_IFLIST2)</code> 驱动，彻底解决 32 位溢出 Bug。支持双行微型堆叠（Stack）与左右并排（Opposed），提供 180° 数学对称微型箭头与视网膜冷暖色彩光渗光学补偿。
+            通过系统底层 64 位 <code>sysctl (NET_RT_IFLIST2)</code> 接口直接读取网络硬件接口字节计数，避免高负载下的流量统计截断。支持上下双行紧凑微型堆叠（Stack）与左右并排（Opposed），支持自定义单色、彩色区分以及微速自动隐藏。
           </p>
         </div>
-        <div class="bento-visual">
-          <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
-            <span>排版样式: 双行堆叠 / 并列</span>
-            <span style="color: var(--accent-blue);">零内存堆分配</span>
+        <div class="feature-preview">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted);">展示布局: 双行堆叠 / 左右并排</span>
+            <span style="color: var(--accent-blue);">零堆内存分配</span>
           </div>
         </div>
       </div>
 
       <!-- 2. Battery -->
-      <div class="bento-card">
+      <div class="feature-card">
         <div>
-          <div class="bento-icon green">
-            <i class="ph-fill ph-battery-charging"></i>
+          <div class="feature-header">
+            <div class="feature-icon-badge" style="color: #30D158;">
+              <i class="ph-bold ph-battery-charging"></i>
+            </div>
+            <div>
+              <h3>内建胶囊电池 (Battery Care)</h3>
+            </div>
           </div>
-          <h3>内建胶囊电池 (Battery Care)</h3>
           <p>
-            1:1 像素复刻 macOS 原生电池框体与端子，电量颜色无缝贴合外框。实时监测电池设计容量、真实健康寿命百分比、循环计数与出厂年龄推算。
+            像素级贴合 macOS 原生电池轮廓，电量百分比与充放电状态直观呈现。深入读取原厂设计容量与健康衰减度、循环充放电次数、实际协商功率及出厂使用时长。
           </p>
+        </div>
+        <div class="feature-preview">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="tag-chip">健康度计算</span>
+            <span class="tag-chip">充放电循环</span>
+            <span class="tag-chip">出厂年龄</span>
+          </div>
         </div>
       </div>
 
       <!-- 3. Fans -->
-      <div class="bento-card">
+      <div class="feature-card">
         <div>
-          <div class="bento-icon purple">
-            <i class="ph-bold ph-fan"></i>
+          <div class="feature-header">
+            <div class="feature-icon-badge" style="color: #BF5AF2;">
+              <i class="ph-bold ph-fan"></i>
+            </div>
+            <div>
+              <h3>智能风扇转速 (Smart Fans)</h3>
+            </div>
           </div>
-          <h3>智能双风扇独立监控</h3>
           <p>
-            自适应单风扇（MacBook Pro 13"）与双风扇（MacBook Pro 14"/16"）机型。支持左右风扇并列展示、独立最高速或单侧锁定，支持 M 系列无风扇机型静音识别。
+            自动检测并适配单风扇机型（MacBook Pro 13" / Mac mini）与双风扇机型（MacBook Pro 14"/16"）。支持双风扇独立并列展示或跟踪最高转速，无风扇机型（MacBook Air）智能休眠静音。
           </p>
+        </div>
+        <div class="feature-preview">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="tag-chip">双风扇独立</span>
+            <span class="tag-chip">无风扇静音识别</span>
+          </div>
         </div>
       </div>
 
       <!-- 4. Thermal -->
-      <div class="bento-card col-span-2">
+      <div class="feature-card col-span-2">
         <div>
-          <div class="bento-icon orange">
-            <i class="ph-fill ph-thermometer-hot"></i>
+          <div class="feature-header">
+            <div class="feature-icon-badge" style="color: #FF9F0A;">
+              <i class="ph-bold ph-thermometer-hot"></i>
+            </div>
+            <div>
+              <h3>10 大分类硬件温度 (Thermal Matrix)</h3>
+              <div style="font-size: 0.8rem; color: var(--text-faint);">细致入微的硬件传感器探针</div>
+            </div>
           </div>
-          <h3>10 大分类全维度温度透视</h3>
           <p>
-            整合 Apple Silicon SMC 与 IOHID 内核事件探针，划分为中央处理器、图形处理器、SoC芯片、统一内存、固态硬盘、电池电芯、散热风道等 10 大硬件类别，支持单项折叠展开与峰值告警。
+            整合 Apple Silicon SMC 与 IOHID 内核传感器事件，划分为中央处理器、图形核心、SoC、统一内存、固态硬盘、电池电芯、供电组件、散热风道等 10 大硬件类别。浮动面板支持分类一键展开与高温阈值警示。
           </p>
         </div>
-        <div class="bento-visual">
+        <div class="feature-preview">
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">CPU</span>
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">GPU</span>
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">SoC</span>
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">RAM</span>
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">SSD</span>
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">电池</span>
-            <span style="padding: 2px 8px; background: rgba(255,255,255,0.08); border-radius: 6px;">供电</span>
+            <span class="tag-chip">CPU</span>
+            <span class="tag-chip">GPU</span>
+            <span class="tag-chip">SoC</span>
+            <span class="tag-chip">内存</span>
+            <span class="tag-chip">SSD 固态</span>
+            <span class="tag-chip">电池电芯</span>
+            <span class="tag-chip">供电组件</span>
+            <span class="tag-chip">机身掌托</span>
           </div>
         </div>
       </div>
@@ -1054,149 +1409,158 @@
   </section>
 
   <!-- Performance Comparison -->
-  <section class="compare-section" id="performance">
-    <div class="section-title">
-      <h2>极致能效对比</h2>
-      <p>拒绝无节制的背景轮询，让每一焦耳电量都用在刀刃上。</p>
+  <section class="compare-container" id="performance">
+    <div class="section-header">
+      <div class="section-eyebrow">Performance</div>
+      <h2 class="section-title">极致克制的系统资源开销</h2>
+      <p class="section-desc">拒绝高频后台空转与无意义渲染，将每一焦耳电量还给你的生产力应用。</p>
     </div>
 
-    <table class="compare-table">
-      <thead>
-        <tr>
-          <th>监控工具 / 指标</th>
-          <th>单核 CPU 占用</th>
-          <th>闲置每秒唤醒</th>
-          <th>后台未展示模块策略</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>MenuBar Pulse</strong></td>
-          <td class="highlight-cell">0.0% ~ 0.7%</td>
-          <td class="highlight-cell">3 次/秒</td>
-          <td class="highlight-cell">完全挂起（0 IOKit/SMC 调用）</td>
-        </tr>
-        <tr>
-          <td>macOS 原生 SystemUIServer</td>
-          <td>2.0% ~ 2.5%</td>
-          <td>15~30 次/秒</td>
-          <td>全量轮询</td>
-        </tr>
-        <tr>
-          <td>传统 Electron / 跨平台监控工具</td>
-          <td>4.5% ~ 12.0%</td>
-          <td>100~300 次/秒</td>
-          <td>持续全量重绘</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="code-block">
-      <span>$ git clone https://github.com/thesadboy/MenuBar-Pulse.git</span>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone https://github.com/thesadboy/MenuBar-Pulse.git'); this.textContent='已复制!'; setTimeout(()=>this.textContent='复制', 1500)">复制</button>
+    <div class="table-wrapper">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>监控工具 / 指标</th>
+            <th>单核 CPU 占用</th>
+            <th>闲置每秒唤醒</th>
+            <th>未开启模块开销</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="highlight-brand"><strong>MenuBar Pulse</strong></td>
+            <td class="highlight-val">0.0% ~ 0.7% (整机 &lt; 0.1%)</td>
+            <td class="highlight-val">3 次/秒</td>
+            <td class="highlight-val">完全挂起（0 IOKit/SMC 调用）</td>
+          </tr>
+          <tr>
+            <td>macOS 系统原生组件</td>
+            <td>2.0% ~ 2.5%</td>
+            <td>15 ~ 30 次/秒</td>
+            <td>全量轮询</td>
+          </tr>
+          <tr>
+            <td>传统跨平台 / 监控应用</td>
+            <td>4.5% ~ 12.0%</td>
+            <td>100 ~ 300 次/秒</td>
+            <td>常驻后台重绘</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
   <!-- Installation Guide -->
-  <section class="compare-section" id="installation">
-    <div class="section-title">
-      <h2>安装指南</h2>
-      <p>两种方式，三步完成，即刻启动你的 Mac 监控中心。</p>
+  <section class="install-container" id="installation">
+    <div class="section-header">
+      <div class="section-eyebrow">Get Started</div>
+      <h2 class="section-title">安装与启动</h2>
+      <p class="section-desc">提供开箱即用的预编译 DMG 安装包，亦可直接克隆源码本地一键编译。</p>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="install-grid">
       <!-- Method 1: DMG -->
-      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 2rem; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #0A84FF, #30D158);"></div>
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
-          <span style="background: rgba(10, 132, 255, 0.15); color: #0A84FF; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">推荐</span>
-          <h3 style="font-size: 1.15rem; font-weight: 700;">方式一：下载 DMG 安装包</h3>
+      <div class="install-card">
+        <div>
+          <div class="install-header">
+            <h3>方式一：下载 DMG 安装包</h3>
+            <span class="install-badge rec">推荐日常使用</span>
+          </div>
+          
+          <div class="install-steps">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-text">
+                <strong>下载安装包</strong><br>
+                从 GitHub Releases 下载最新的 <span class="code-inline">MenuBarPulse.dmg</span>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div class="step-text">
+                <strong>拖入应用程序</strong><br>
+                双击打开挂载镜像，将图标拖拽至 Applications 文件夹即可
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div class="step-text">
+                <strong>即刻使用</strong><br>
+                在启动台中打开 MenuBar Pulse，状态栏指标即时就位
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-            <span style="background: rgba(10, 132, 255, 0.12); color: #0A84FF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">1</span>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">下载安装包</div>
-              <div style="color: var(--text-secondary); font-size: 0.88rem;">前往 <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" target="_blank" style="color: #0A84FF; text-decoration: none;">GitHub Releases</a> 下载最新的 <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">MenuBarPulse.dmg</code></div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-            <span style="background: rgba(10, 132, 255, 0.12); color: #0A84FF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">2</span>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">拖拽安装</div>
-              <div style="color: var(--text-secondary); font-size: 0.88rem;">双击打开 DMG 挂载镜像，将 <strong>MenuBarPulse.app</strong> 拖入 Applications 文件夹</div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-            <span style="background: rgba(10, 132, 255, 0.12); color: #0A84FF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">3</span>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">启动应用</div>
-              <div style="color: var(--text-secondary); font-size: 0.88rem;">在启动台中打开 MenuBar Pulse，状态栏图标即时呈现</div>
-            </div>
-          </div>
-        </div>
-        <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" target="_blank" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
-          <i class="ph-bold ph-download-simple"></i> 立即下载最新版
+
+        <a href="https://github.com/thesadboy/MenuBar-Pulse/releases/latest" target="_blank" class="btn btn-primary" style="justify-content: center; padding: 0.75rem;">
+          <i class="ph-bold ph-download-simple"></i> 前往 Releases 下载 DMG (v1.1.1)
         </a>
       </div>
 
       <!-- Method 2: Source Build -->
-      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 2rem; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #BF5AF2, #FF9F0A);"></div>
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
-          <span style="background: rgba(191, 90, 242, 0.15); color: #BF5AF2; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">开发者</span>
-          <h3 style="font-size: 1.15rem; font-weight: 700;">方式二：从源码编译</h3>
+      <div class="install-card">
+        <div>
+          <div class="install-header">
+            <h3>方式二：源码本地编译</h3>
+            <span class="install-badge dev">开发者选项</span>
+          </div>
+          
+          <div class="install-steps">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div class="step-text">
+                <strong>克隆代码仓库</strong>
+                <div class="terminal-box">
+                  <span>git clone https://github.com/thesadboy/MenuBar-Pulse.git</span>
+                  <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone https://github.com/thesadboy/MenuBar-Pulse.git'); this.textContent='已复制'; setTimeout(()=>this.textContent='复制', 1500)">复制</button>
+                </div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div class="step-text">
+                <strong>执行一键编译脚本</strong>
+                <div class="terminal-box">
+                  <span>cd MenuBar-Pulse/MenuBarPulse && ./build.sh</span>
+                  <button class="copy-btn" onclick="navigator.clipboard.writeText('cd MenuBar-Pulse/MenuBarPulse && ./build.sh'); this.textContent='已复制'; setTimeout(()=>this.textContent='复制', 1500)">复制</button>
+                </div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div class="step-text">
+                <strong>自动安装运行</strong><br>
+                脚本完成编译与本地代码签名，直接安装至应用程序并启动
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-            <span style="background: rgba(191, 90, 242, 0.12); color: #BF5AF2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">1</span>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">克隆仓库</div>
-              <div style="color: var(--text-secondary); font-size: 0.88rem;"><code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">git clone https://github.com/thesadboy/MenuBar-Pulse.git</code></div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-            <span style="background: rgba(191, 90, 242, 0.12); color: #BF5AF2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">2</span>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">一键编译安装</div>
-              <div style="color: var(--text-secondary); font-size: 0.88rem;"><code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">cd MenuBar-Pulse/MenuBarPulse && ./build.sh</code></div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-            <span style="background: rgba(191, 90, 242, 0.12); color: #BF5AF2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;">3</span>
-            <div>
-              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px;">自动启动</div>
-              <div style="color: var(--text-secondary); font-size: 0.88rem;">脚本会自动编译、签名、安装到 <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.82rem;">/Applications</code> 并立即启动</div>
-            </div>
-          </div>
-        </div>
-        <a href="https://github.com/thesadboy/MenuBar-Pulse" target="_blank" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
-          <i class="ph-bold ph-github-logo"></i> 查看源码仓库
+
+        <a href="https://github.com/thesadboy/MenuBar-Pulse" target="_blank" class="btn btn-secondary" style="justify-content: center; padding: 0.75rem;">
+          <i class="ph-bold ph-github-logo"></i> 查看 GitHub 源代码
         </a>
       </div>
     </div>
 
-    <!-- System Requirements -->
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem 2rem;">
-      <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ph-fill ph-info" style="color: #0A84FF;"></i> 系统要求
-      </h3>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
+    <!-- System Requirements Box -->
+    <div class="sys-specs-box">
+      <h4><i class="ph-bold ph-info" style="color: var(--accent-blue);"></i> 系统环境与兼容性</h4>
+      <div class="specs-row">
         <div>
-          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">操作系统</div>
-          <div style="font-weight: 600; font-size: 0.95rem;">macOS 14.0+</div>
+          <div class="spec-col-label">支持系统</div>
+          <div class="spec-col-val">macOS 13.0 Ventura 或更高 (推荐 macOS 14+)</div>
         </div>
         <div>
-          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">处理器架构</div>
-          <div style="font-weight: 600; font-size: 0.95rem;">Apple Silicon / Intel</div>
+          <div class="spec-col-label">支持硬件</div>
+          <div class="spec-col-val">Apple Silicon (M1/M2/M3/M4) 及 Intel 机型</div>
         </div>
         <div>
-          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">编译要求</div>
-          <div style="font-weight: 600; font-size: 0.95rem;">Swift 5.9+ / Xcode 15+</div>
+          <div class="spec-col-label">开发环境</div>
+          <div class="spec-col-val">Xcode 15+ / Swift 5.9+</div>
         </div>
         <div>
-          <div style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 0.25rem;">第三方依赖</div>
-          <div style="font-weight: 600; font-size: 0.95rem; color: #30D158;">零依赖 ✓</div>
+          <div class="spec-col-label">依赖与权限</div>
+          <div class="spec-col-val" style="color: #30D158;">零第三方依赖 • 无需 Root 提权</div>
         </div>
       </div>
     </div>
@@ -1204,14 +1568,21 @@
 
   <!-- Footer -->
   <footer>
-    <p>© 2026 MenuBar Pulse. Released under the MIT License.</p>
-    <p style="margin-top: 0.5rem; font-size: 0.85rem;">
-      Crafted with pure Swift & SwiftUI for macOS.
+    <ul class="footer-links">
+      <li><a href="https://github.com/thesadboy/MenuBar-Pulse" target="_blank">GitHub</a></li>
+      <li><a href="https://github.com/thesadboy/MenuBar-Pulse/releases" target="_blank">Releases</a></li>
+      <li><a href="https://github.com/thesadboy/MenuBar-Pulse/blob/main/LICENSE" target="_blank">MIT License</a></li>
+      <li><a href="#features">功能特性</a></li>
+      <li><a href="#installation">安装指南</a></li>
+    </ul>
+    <p>© 2026 MenuBar Pulse. 遵循 MIT 开源许可协议。</p>
+    <p style="margin-top: 0.4rem; font-size: 0.8rem; color: var(--text-faint);">
+      Crafted with Swift & SwiftUI for macOS.
     </p>
   </footer>
 
+  <!-- Interactive Demo Logic -->
   <script>
-    // DOM elements
     const upEl = document.getElementById('liveUpSpeed');
     const downEl = document.getElementById('liveDownSpeed');
     const cardUpEl = document.getElementById('cardUpSpeed');
@@ -1225,12 +1596,17 @@
     const tempVal = document.getElementById('tempVal');
 
     // All clickable module items toggle popover
-    const allMenuItems = [menuItem, document.getElementById('menuItemBat'), document.getElementById('menuItemFan'), document.getElementById('menuItemTemp')];
+    const allMenuItems = [
+      menuItem, 
+      document.getElementById('menuItemBat'), 
+      document.getElementById('menuItemFan'), 
+      document.getElementById('menuItemTemp')
+    ];
+    
     allMenuItems.forEach(item => {
       if (!item) return;
       item.addEventListener('click', () => {
         const isVisible = popover.classList.toggle('visible');
-        // Only highlight the clicked item
         allMenuItems.forEach(m => m.classList.remove('active'));
         if (isVisible) item.classList.add('active');
       });
@@ -1242,13 +1618,12 @@
       return kb.toFixed(1) + ' KB/s';
     }
 
-    // Simulate realistic network speed with occasional bursts
+    // Simulate realistic network flow
     let burstTimer = 0;
     let inBurst = false;
 
     setInterval(() => {
       burstTimer++;
-      // Random burst every 8-15 ticks
       if (!inBurst && burstTimer > 8 + Math.random() * 7) {
         inBurst = true;
         burstTimer = 0;
@@ -1260,11 +1635,11 @@
 
       let up, down;
       if (inBurst) {
-        up = Math.random() * 200 + 50;
-        down = Math.random() * 2000 + 500;
+        up = Math.random() * 240 + 60;
+        down = Math.random() * 2200 + 800;
       } else {
-        up = Math.random() * 4 + 0.3;
-        down = Math.random() * 20 + 2;
+        up = Math.random() * 3.5 + 0.4;
+        down = Math.random() * 18 + 2;
       }
 
       upEl.textContent = fmtSpeed(up);
@@ -1273,7 +1648,7 @@
       cardDownEl.textContent = `${fmtSpeed(down)} | 14.62 GB`;
     }, 1200);
 
-    // Simulate fan RPM fluctuation
+    // Simulate fan RPM
     let baseRpm = 1850;
     setInterval(() => {
       baseRpm += Math.floor(Math.random() * 40 - 20);
@@ -1281,20 +1656,19 @@
       fanRpm.textContent = baseRpm;
     }, 2500);
 
-    // Simulate temperature variation
+    // Simulate temperature
     let baseTemp = 41;
     setInterval(() => {
-      baseTemp += Math.random() * 2 - 1;
-      baseTemp = Math.max(35, Math.min(52, baseTemp));
+      baseTemp += Math.random() * 1.8 - 0.9;
+      baseTemp = Math.max(36, Math.min(50, baseTemp));
       const t = Math.round(baseTemp);
       tempVal.textContent = `${t}°C`;
-      // Color shift: green < 45, orange 45-55, red > 55
-      if (t >= 50) tempVal.style.color = '#FF453A';
-      else if (t >= 45) tempVal.style.color = '#FF9F0A';
+      if (t >= 48) tempVal.style.color = '#FF453A';
+      else if (t >= 44) tempVal.style.color = '#FF9F0A';
       else tempVal.style.color = '#FF9F0A';
     }, 3000);
 
-    // Update clock
+    // System clock
     function updateClock() {
       const now = new Date();
       clockEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
