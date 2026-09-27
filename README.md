@@ -99,6 +99,8 @@ MenuBar Pulse 采用了系统级降载与惰性响应架构，在活动监视器
 2. 下载最新版 `MenuBarPulse.dmg`；
 3. 打开 DMG 镜像，将 `MenuBarPulse.app` 拖入 `Applications` 文件夹即可使用。
 
+> **💡 首次打开提示**：若 macOS 门禁提示「无法打开」或「已损坏」，在访达「应用程序」中**右键点击应用图标选择「打开」**即可永久信任；或在终端执行 `xattr -cr /Applications/MenuBarPulse.app` 清除下载隔离属性。
+
 ### 方式二：源码本地编译与打包
 
 本项目采用原生 macOS 命令行工具链，无需安装任何第三方外部包管理器：

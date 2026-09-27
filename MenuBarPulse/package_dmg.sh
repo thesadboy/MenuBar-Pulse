@@ -24,7 +24,10 @@ elif [ -d "/Applications/MenuBarPulse.app" ]; then
 fi
 ln -s /Applications "${STAGING_DIR}/Applications"
 
-echo "==> 4. 生成 DMG 安装镜像..."
+echo "==> 4. 清除暂存目录中残留的系统隔离与扩展属性..."
+xattr -rc "${STAGING_DIR}" 2>/dev/null || true
+
+echo "==> 5. 生成 DMG 安装镜像..."
 rm -f "${OUTPUT_DMG}" "${DIR}/${DMG_NAME}.dmg"
 
 hdiutil create \
@@ -34,9 +37,16 @@ hdiutil create \
     -format UDZO \
     "${OUTPUT_DMG}"
 
-echo "==> 5. 自动执行清理（移除临时挂载、多余副本与隐藏元数据）..."
+SIGN_ID="${CODESIGN_IDENTITY:--}"
+echo "==> 6. 对 DMG 安装镜像执行代码签名 (签名标识: ${SIGN_ID})..."
+codesign --force --sign "${SIGN_ID}" "${OUTPUT_DMG}" || {
+    echo "    警告: DMG 签名失败，保留未签名产物"
+}
+
+echo "==> 7. 自动执行清理（移除临时挂载、多余副本与隐藏元数据）..."
 bash "${DIR}/clean.sh" --all
 
-echo "==> 6. DMG 打包完成！"
+echo "==> 8. DMG 打包完成！"
 echo "    文件位置：${OUTPUT_DMG}"
 ls -lh "${OUTPUT_DMG}"
+

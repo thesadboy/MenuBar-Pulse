@@ -39,8 +39,10 @@ swiftc \
     -o "${MACOS_DIR}/${APP_NAME}" \
     "${SOURCES[@]}"
 
-echo "==> 正在进行应用签名..."
-codesign --force --deep --sign - "${APP_BUNDLE}"
+SIGN_ID="${CODESIGN_IDENTITY:--}"
+echo "==> 正在进行应用签名 (签名标识: ${SIGN_ID})..."
+codesign --force --deep --sign "${SIGN_ID}" "${APP_BUNDLE}"
+
 
 # 只有在非 CI 环境且没有指定 --no-install 时才同步到 /Applications
 if [ "$1" != "--no-install" ] && [ "$CI" != "true" ]; then
