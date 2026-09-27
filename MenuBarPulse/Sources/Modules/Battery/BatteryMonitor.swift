@@ -375,7 +375,13 @@ public final class BatteryMonitor {
                 }
             }
             
-            if let lvl = self.cachedLastChargeLevel, lvl > 0 {
+            if var lvl = self.cachedLastChargeLevel, lvl > 0 {
+                // 物理自洽兜底：电池供电期间，拔出时的电量绝不可能低于当前实际剩余电量
+                if lvl < snapshot.percentage {
+                    lvl = snapshot.percentage
+                    self.cachedLastChargeLevel = lvl
+                    UserDefaults.standard.set(lvl, forKey: "mbs_lastChargeLevel")
+                }
                 snapshot.lastChargeFormatted = "\(timeAgo) (充至 \(lvl)%)"
             } else {
                 snapshot.lastChargeFormatted = timeAgo
@@ -445,7 +451,9 @@ public final class BatteryMonitor {
                         let curr = events[i]
                         let prev = events[i - 1]
                         if !curr.isAC && prev.isAC {
-                            lastUnplug = PowerEvent(date: curr.date, isAC: false, charge: prev.charge ?? curr.charge)
+                            // curr 是切入电池供电的第一条事件，其电量是最贴近拔出时刻的真实电量
+                            let unplugCharge = curr.charge ?? prev.charge
+                            lastUnplug = PowerEvent(date: curr.date, isAC: false, charge: unplugCharge)
                             break
                         }
                     }
@@ -472,8 +480,11 @@ public final class BatteryMonitor {
                         if isNewer || isSleepAnomaly {
                             self.cachedLastChargeDate = unplug.date
                             if let ch = unplug.charge, ch > 0 {
-                                self.cachedLastChargeLevel = ch
-                                UserDefaults.standard.set(ch, forKey: "mbs_lastChargeLevel")
+                                // 物理自洽校验：在电池供电期间，拔出充电器时刻的电量绝不可能低于当前实际剩余电量
+                                let currentPct = self.cachedSnapshot.percentage
+                                let validCharge = max(ch, currentPct)
+                                self.cachedLastChargeLevel = validCharge
+                                UserDefaults.standard.set(validCharge, forKey: "mbs_lastChargeLevel")
                             }
                             UserDefaults.standard.set(unplug.date.timeIntervalSince1970, forKey: "mbs_lastChargeTimestamp")
                         }
