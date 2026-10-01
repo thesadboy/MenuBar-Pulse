@@ -10,22 +10,21 @@ public struct StemArrowShape: Shape {
     
     public func path(in rect: CGRect) -> Path {
         var p = Path()
-        let w = rect.width
+        let midX = rect.midX
+        let midY = rect.midY
         let h = rect.height
-        let midX = (w / 2.0).rounded()
-        let midY = (h / 2.0).rounded()
         
         let stemHalfWidth: CGFloat = 1.0
         let stemLeft = midX - stemHalfWidth
         let stemRight = midX + stemHalfWidth
-        let headBaseY: CGFloat = (h * 0.45).rounded()
+        let headBaseY: CGFloat = rect.minY + (h * 0.45).rounded()
         
-        p.move(to: CGPoint(x: stemLeft, y: h))
-        p.addLine(to: CGPoint(x: stemRight, y: h))
+        p.move(to: CGPoint(x: stemLeft, y: rect.maxY))
+        p.addLine(to: CGPoint(x: stemRight, y: rect.maxY))
         p.addLine(to: CGPoint(x: stemRight, y: headBaseY))
-        p.addLine(to: CGPoint(x: w, y: headBaseY))
-        p.addLine(to: CGPoint(x: midX, y: 0.0))
-        p.addLine(to: CGPoint(x: 0.0, y: headBaseY))
+        p.addLine(to: CGPoint(x: rect.maxX, y: headBaseY))
+        p.addLine(to: CGPoint(x: midX, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.minX, y: headBaseY))
         p.addLine(to: CGPoint(x: stemLeft, y: headBaseY))
         p.closeSubpath()
         
@@ -95,6 +94,7 @@ public struct NetworkItemView: View {
                             if prefs.netItemType != .none {
                                 indicatorShapeView(type: prefs.netItemType, isUp: true, color: upColor, alpha: upAlpha)
                                     .frame(width: 7.0, height: 7.0)
+                                    .offset(y: 1.0)
                             }
                             Text(upStr)
                                 .font(.system(size: 9.0, weight: .light).monospacedDigit())
@@ -106,6 +106,7 @@ public struct NetworkItemView: View {
                             if prefs.netItemType != .none {
                                 indicatorShapeView(type: prefs.netItemType, isUp: false, color: downColor, alpha: downAlpha)
                                     .frame(width: 7.0, height: 7.0)
+                                    .offset(y: 1.0)
                             }
                             Text(downStr)
                                 .font(.system(size: 9.0, weight: .light).monospacedDigit())
