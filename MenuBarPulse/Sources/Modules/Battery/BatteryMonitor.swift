@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import IOKit
 import IOKit.ps
 
@@ -74,6 +75,8 @@ public final class BatteryMonitor {
     private var cachedLastChargeLevel: Int? = nil
     private var prevIsACConnected: Bool? = nil
     private var isFetchingPmsetLog: Bool = false
+    private var lastPmsetFetchTime: Date = .distantPast
+    private var powerSourceRunLoopSource: CFRunLoopSource? = nil
     
     private let queue = DispatchQueue(label: "com.menubarpulse.battery", qos: .utility)
     
@@ -90,6 +93,77 @@ public final class BatteryMonitor {
         
         refreshSystemMaxCapacity()
         fetchLastChargeFromPmset()
+        
+        // 1. 注册系统底层 IOKit 电源插拔事件监听源（0% CPU，微秒级响应插拔，即使菜单栏未开电池图标亦可实时感知）
+        let context = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        let source = IOPSNotificationCreateRunLoopSource({ info in
+            guard let info = info else { return }
+            let monitor = Unmanaged<BatteryMonitor>.fromOpaque(info).takeUnretainedValue()
+            monitor.handlePowerSourceChanged()
+        }, context)
+        
+        if let runLoopSource = source?.takeRetainedValue() {
+            CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            self.powerSourceRunLoopSource = runLoopSource
+        }
+        
+        // 2. 注册系统休眠唤醒事件监听（防止合盖/休眠期间拔掉充电器未被感知）
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleSystemWake()
+        }
+    }
+    
+    private func handlePowerSourceChanged() {
+        queue.async { [weak self] in
+            guard let self = self else { return }
+            let isAC = self.checkIsACConnected()
+            DispatchQueue.main.async {
+                let prev = self.prevIsACConnected
+                self.prevIsACConnected = isAC
+                
+                if let prev = prev, prev && !isAC {
+                    // 刚刚拔出充电器
+                    let now = Date()
+                    self.cachedLastChargeDate = now
+                    self.cachedLastChargeLevel = self.cachedSnapshot.percentage
+                    UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "mbs_lastChargeTimestamp")
+                    UserDefaults.standard.set(self.cachedSnapshot.percentage, forKey: "mbs_lastChargeLevel")
+                    self.fetchLastChargeFromPmset()
+                } else if !isAC {
+                    self.fetchLastChargeFromPmset()
+                }
+                
+                _ = self.update(force: true)
+                AppState.shared.refreshData()
+            }
+        }
+    }
+    
+    private func handleSystemWake() {
+        // 系统唤醒（如开盖唤醒）：无论当前在接电还是用电池，都异步拉取底层 pmset 校准
+        fetchLastChargeFromPmset()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            _ = self?.update(force: true)
+            AppState.shared.refreshData()
+        }
+    }
+    
+    private func checkIsACConnected() -> Bool {
+        guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let list = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef] else {
+            return false
+        }
+        for source in list {
+            if let desc = IOPSGetPowerSourceDescription(info, source)?.takeUnretainedValue() as? [String: Any] {
+                let state = desc[kIOPSPowerSourceStateKey] as? String ?? ""
+                return state == kIOPSACPowerValue
+            }
+        }
+        return false
     }
     
     public func update(force: Bool = false) -> BatterySnapshot {
@@ -269,15 +343,46 @@ public final class BatteryMonitor {
                         } else if days > 0 {
                             snapshot.ageString = "\(days)天"
                         }
-                    } else if let lifetime = bData["LifetimeData"] as? [String: Any],
-                              let totalOpHours = lifetime["TotalOperatingTime"] as? Int, totalOpHours > 0 {
-                        let days = totalOpHours / 24
-                        let years = days / 365
-                        let months = (days % 365) / 30
-                        if years > 0 {
-                            snapshot.ageString = months > 0 ? "\(years)年\(months)个月" : "\(years)年"
-                        } else if months > 0 {
-                            snapshot.ageString = "\(months)个月"
+                    }
+                    
+                    // 方案 C：从 AppleSmartBattery 或 AppleSmartBatteryPack 读取硬件 LifetimeData (适用于 Apple Silicon / 随机序列号机型)
+                    if snapshot.ageString.isEmpty {
+                        var opHours: Int? = (bData["LifetimeData"] as? [String: Any])?["TotalOperatingTime"] as? Int
+                        
+                        if opHours == nil || opHours == 0 {
+                            let packService = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSmartBatteryPack"))
+                            if packService != 0 {
+                                var packProps: Unmanaged<CFMutableDictionary>?
+                                if IORegistryEntryCreateCFProperties(packService, &packProps, kCFAllocatorDefault, 0) == KERN_SUCCESS,
+                                   let packDict = packProps?.takeRetainedValue() as? [String: Any],
+                                   let packBData = packDict["BatteryData"] as? [String: Any],
+                                   let lifetime = packBData["LifetimeData"] as? [String: Any] {
+                                    opHours = lifetime["TotalOperatingTime"] as? Int
+                                }
+                                IOObjectRelease(packService)
+                            }
+                        }
+                        
+                        if let totalOpHours = opHours, totalOpHours > 0 {
+                            let days = totalOpHours / 24
+                            let years = days / 365
+                            let months = (days % 365) / 30
+                            if years > 0 {
+                                snapshot.ageString = months > 0 ? "\(years)年\(months)个月" : "\(years)年"
+                            } else if months > 0 {
+                                snapshot.ageString = "\(months)个月"
+                            } else if days > 0 {
+                                snapshot.ageString = "\(days)天"
+                            }
+                            
+                            if snapshot.manufactureDateString.isEmpty {
+                                let estDate = Calendar.current.date(byAdding: .hour, value: -totalOpHours, to: Date())
+                                if let est = estDate {
+                                    let df = DateFormatter()
+                                    df.dateFormat = "yyyy-MM"
+                                    snapshot.manufactureDateString = df.string(from: est)
+                                }
+                            }
                         }
                     }
                     
@@ -390,6 +495,14 @@ public final class BatteryMonitor {
             snapshot.lastChargeFormatted = "获取中..."
         }
         
+        // 当打开控制面板且处于纯电池供电时，若超过 15 秒未校验 pmset，主动异步拉取一次确保绝对最新
+        if force && !snapshot.isACConnected {
+            if now.timeIntervalSince(lastPmsetFetchTime) > 15 {
+                lastPmsetFetchTime = now
+                fetchLastChargeFromPmset()
+            }
+        }
+        
         self.cachedSnapshot = snapshot
         return snapshot
     }
@@ -487,6 +600,12 @@ public final class BatteryMonitor {
                                 UserDefaults.standard.set(validCharge, forKey: "mbs_lastChargeLevel")
                             }
                             UserDefaults.standard.set(unplug.date.timeIntervalSince1970, forKey: "mbs_lastChargeTimestamp")
+                            
+                            // 立即让当前快照生效并刷新文案
+                            self.cachedSnapshot.lastChargeDate = self.cachedLastChargeDate
+                            self.cachedSnapshot.lastChargeLevel = self.cachedLastChargeLevel
+                            _ = self.update(force: true)
+                            AppState.shared.batState.snapshot = self.cachedSnapshot
                         }
                     }
                 }
